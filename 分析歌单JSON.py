@@ -24,10 +24,18 @@ def 处理歌单JSON(JSONData):
                 歌单数据词典['歌曲'][i]['音频比率'] = 原始词典['result']['tracks'][i][包含文件格式的子词典名称[j]]['bitrate']
             except:
                 pass
+    #添加专辑信息
+        歌单数据词典['歌曲'][i]['专辑'] = {}
+        歌单数据词典['歌曲'][i]['专辑']['专辑名'] = 原始词典['result']['tracks'][i]['album']['name']
+        歌单数据词典['歌曲'][i]['专辑']['专辑ID'] = 原始词典['result']['tracks'][i]['album']['id']
+        歌单数据词典['歌曲'][i]['专辑']['专辑封面'] = 原始词典['result']['tracks'][i]['album']['picUrl']
+
+        publishTime =原始词典['result']['tracks'][i]['album']['publishTime']
+        publishTime = int(publishTime)
+        #把unix时间戳转换为正常时间
+        ####有BUG!!
+        year = publishTime // 100000000000
+        歌单数据词典['歌曲'][i]['专辑']['发行年份'] = year
+
+
     return 歌单数据词典
-
-if __name__ == '__main__':
-    歌单JSON = open('歌单数据JSON样本.json','r',encoding='utf-8').read()
-    歌单数据 = 处理歌单JSON(歌单JSON)
-    print(歌单数据)
-

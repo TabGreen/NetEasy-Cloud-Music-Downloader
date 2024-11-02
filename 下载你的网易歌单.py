@@ -1,4 +1,5 @@
 #倒入模块
+from mutagen.id3 import ID3, TIT2, TPE1, TALB, TRCK, TYER, TCON, COMM, TCOM, TEXT, TCOP, TSRC, TBPM, TIT1, APIC
 import requests
 import json
 import os
@@ -8,6 +9,7 @@ import re
 #连接文件
 from 分析歌单JSON import *
 from 分析艺人歌曲列表JSON import *
+from 分析歌曲 import *
 
 #设置常量
 音频比率 = 320000
@@ -131,6 +133,50 @@ def 添加封面到音频(file_path, cover_data, 文件格式):
         audio.save()
     else:
         print(f'不支持为{文件格式}添加图标')
+
+def 添加元数据到音频(file_path,metadata):
+    audio = ID3(file_path)
+    # 添加标题
+    if '标题' in metadata:
+        audio.add(TIT2(encoding=3, text=metadata['标题']))
+    # 添加艺术家
+    if '艺术家' in metadata:
+        audio.add(TPE1(encoding=3, text=metadata['艺术家']))
+    # 添加专辑
+    if '专辑' in metadata:
+        audio.add(TALB(encoding=3, text=metadata['专辑']))
+    # 添加曲目编号
+    if '曲目编号' in metadata:
+        audio.add(TRCK(encoding=3, text=str(metadata['曲目编号'])))
+    # 添加发行年份
+    if '发行年份' in metadata:
+        audio.add(TYER(encoding=3, text=str(metadata['发行年份'])))
+    # 添加流派
+    if '流派' in metadata:
+        audio.add(TCON(encoding=3, text=metadata['流派']))
+    # 添加评论
+    if '评论' in metadata:
+        audio.add(COMM(encoding=3, lang='eng', desc='', text=metadata['评论']))
+    # 添加编曲者
+    if '编曲者' in metadata:
+        audio.add(TCOM(encoding=3, text=metadata['编曲者']))
+    # 添加词作者
+    if '词作者' in metadata:
+        audio.add(TEXT(encoding=3, text=metadata['词作者']))
+    # 添加版权信息
+    if '版权信息' in metadata:
+        audio.add(TCOP(encoding=3, text=metadata['版权信息']))
+    # 添加ISRC
+    if 'ISRC' in metadata:
+        audio.add(TSRC(encoding=3, text=metadata['ISRC']))
+    # 添加BPM
+    if 'BPM' in metadata:
+        audio.add(TBPM(encoding=3, text=str(metadata['BPM'])))
+    # 添加编组
+    if '编组' in metadata:
+        audio.add(TIT1(encoding=3, text=metadata['编组']))
+
+    audio.save()
 #下载音乐文件
 def 依次下载音乐(歌单信息):
     try:
@@ -154,6 +200,8 @@ def 依次下载音乐(歌单信息):
                 歌手 += ','
         歌曲ID = 歌单信息['歌曲'][i]['歌曲ID']
         歌曲图标 = 歌单信息['歌曲'][i]['图标']
+        专辑名 = 歌单信息['歌曲'][i]['专辑']['专辑名']
+        发行年份 = 歌单信息['歌曲'][i]['专辑']['发行年份']
         #文件格式 = 歌单信息['歌曲'][i]['文件格式']
         音频比率 = 歌单信息['歌曲'][i]['音频比率']
         [音乐URL,文件格式] = 获取音乐URL(组合音乐接口URL(歌曲ID,音频比率))
@@ -172,6 +220,12 @@ def 依次下载音乐(歌单信息):
         文件名 = 清洗文件名(歌名+'-'+歌手+'.'+文件格式)
         open(文件名,'wb').write(音乐文件数据.content)
         添加封面到音频(文件名, 图标文件数据.content, 文件格式)
+        添加元数据到音频(文件名,{
+            '标题': 歌名,
+            '艺术家': 歌手,
+            '专辑': 专辑名,
+            '发行年份': 发行年份,
+        })
         time.sleep(0.2)
 
 def main():
