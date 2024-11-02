@@ -175,6 +175,8 @@ def 添加元数据到音频(file_path,metadata):
     # 添加编组
     if '编组' in metadata:
         audio.add(TIT1(encoding=3, text=metadata['编组']))
+
+    audio.save()
 #下载音乐文件
 def 依次下载音乐(歌单信息):
     try:
